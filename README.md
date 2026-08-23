@@ -40,6 +40,17 @@ Die aktive Datei zum Flashen ist:
 
 Details stehen in [docs/PINOUT.md](docs/PINOUT.md).
 
+## 3D-Druckdaten
+
+Die Gehaeusedaten liegen im Ordner [3d-print](3d-print/):
+
+- `gehaeuse-esp32s3n16r8-lcd-encoder-button-body-fillet.3mf`
+- `deckel-fillet001.3mf`
+- `encoder-knopf-body-fillet.3mf`
+
+Die Dateien sind im 3MF-Format abgelegt und fuer das Gehaeuse mit ESP32-S3,
+LCD, Encoder und Tasten gedacht.
+
 ## Home Assistant Entitaeten
 
 Wichtige Entitaeten:
@@ -105,6 +116,7 @@ sendspin_gartenhaus_player.yaml
 components/
   sendspin/
   speaker_source/
+3d-print/
 docs/
   PINOUT.md
 versions/
