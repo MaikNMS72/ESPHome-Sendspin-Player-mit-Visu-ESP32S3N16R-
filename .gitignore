@@ -11,6 +11,5 @@
 # Local analysis and reference material, not needed for the ESPHome project
 /esphome-2026.8.0-src/
 /sendspin-cpp-0.7.2-src/
-/squeezelite-esp32-reference/
 /video_frames/
 /tools/

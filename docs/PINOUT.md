@@ -1,6 +1,6 @@
 # Pinout
 
-Pinout fuer den Squeezlite Gartenhaus Sendspin ESPHome Player.
+Pinout fuer den Sendspin Gartenhaus ESPHome Player.
 
 ## ESP32-S3
 

@@ -1,6 +1,6 @@
 substitutions:
-  name: squeezlite-gartenhaus
-  friendly_name: Squeezlite Gartenhaus
+  name: sendspin-gartenhaus
+  friendly_name: Sendspin Gartenhaus
   task_stack_in_psram: "true"
 
 esphome:
@@ -47,7 +47,7 @@ wifi:
   password: !secret wifi_password
   ap:
     ssid: "${friendly_name} Fallback"
-    password: "squeezelite"
+    password: "sendspin"
 
 captive_portal:
 

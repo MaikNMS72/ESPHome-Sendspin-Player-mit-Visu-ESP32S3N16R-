@@ -23,5 +23,5 @@ Stand:
 
 Ruecksprung:
 
-Diese Datei kann bei Bedarf nach `squeezlite_gartenhaus_sendspin.yaml` kopiert
+Diese Datei kann bei Bedarf nach `sendspin_gartenhaus_player.yaml` kopiert
 und danach mit ESPHome geflasht werden.

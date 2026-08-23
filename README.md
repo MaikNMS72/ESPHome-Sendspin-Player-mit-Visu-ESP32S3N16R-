@@ -1,6 +1,6 @@
-# Squeezlite Gartenhaus Sendspin ESPHome Player
+# Sendspin Gartenhaus ESPHome Player
 
-ESPHome-Konfiguration fuer einen Squeezlite32/ESP32-S3 Player mit Sendspin,
+ESPHome-Konfiguration fuer einen ESP32-S3 Player mit Sendspin,
 I2S-Audio, ILI9341-Display, WS2812 Sound-to-Light und lokaler Bedienung ueber
 Drehencoder und Tasten.
 
@@ -10,7 +10,7 @@ Der aktuelle stabile Stand ist:
 
 Die aktive Datei zum Flashen ist:
 
-`squeezlite_gartenhaus_sendspin.yaml`
+`sendspin_gartenhaus_player.yaml`
 
 ## Funktionen
 
@@ -44,14 +44,14 @@ Details stehen in [docs/PINOUT.md](docs/PINOUT.md).
 
 Wichtige Entitaeten:
 
-- `media_player.squeezlite_gartenhaus_sendspin_gruppe`
-- `media_player.squeezlite_gartenhaus_player`
-- `switch.squeezlite_gartenhaus_player_power`
-- `switch.squeezlite_gartenhaus_sound_to_light`
-- `number.squeezlite_gartenhaus_sound_to_light_helligkeit`
-- `number.squeezlite_gartenhaus_sound_to_light_empfindlichkeit`
-- `light.squeezlite_gartenhaus_ws2812_leds`
-- `light.squeezlite_gartenhaus_display_backlight`
+- `media_player.sendspin_gartenhaus_sendspin_gruppe`
+- `media_player.sendspin_gartenhaus_player`
+- `switch.sendspin_gartenhaus_player_power`
+- `switch.sendspin_gartenhaus_sound_to_light`
+- `number.sendspin_gartenhaus_sound_to_light_helligkeit`
+- `number.sendspin_gartenhaus_sound_to_light_empfindlichkeit`
+- `light.sendspin_gartenhaus_ws2812_leds`
+- `light.sendspin_gartenhaus_display_backlight`
 
 Der Power-Schalter schaltet lokal Display, LEDs und Verstaerker ab. Die
 Media-Player `turn_on`/`turn_off` Aktionen sind mit diesem Power-Schalter
@@ -94,14 +94,14 @@ Live-Log ruhig bleibt und keine unnoetige Last erzeugt.
 Beispiel:
 
 ```bash
-esphome compile squeezlite_gartenhaus_sendspin.yaml
-esphome upload squeezlite_gartenhaus_sendspin.yaml --device squeezlite-gartenhaus.local
+esphome compile sendspin_gartenhaus_player.yaml
+esphome upload sendspin_gartenhaus_player.yaml --device sendspin-gartenhaus.local
 ```
 
 ## Projektstruktur
 
 ```text
-squeezlite_gartenhaus_sendspin.yaml
+sendspin_gartenhaus_player.yaml
 components/
   sendspin/
   speaker_source/
