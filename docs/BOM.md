@@ -6,7 +6,7 @@ Bill of Materials fuer den Sendspin Gartenhaus ESPHome Player.
 
 | Menge | Bauteil | Technische Daten | Verwendung | Quelle |
 | ---: | --- | --- | --- | --- |
-| 1 | ESP32-S3 Entwicklungsboard N16R8 | ESP32-S3, 2.4 GHz WLAN, USB-C, 44-Pin, 16 MB Flash, 8 MB PSRAM, Arduino/ESP-IDF geeignet | Hauptcontroller fuer ESPHome, Sendspin, Display, Audio, LED-Visualizer und Bedienung | vom Benutzer angegeben |
+| 1 | ESP32-S3 Entwicklungsboard N16R8 | ESP32-S3, 2.4 GHz WLAN, USB-C, 44-Pin, 16 MB Flash, 8 MB PSRAM, Arduino/ESP-IDF geeignet | Hauptcontroller fuer ESPHome, Sendspin, Display, Audio, LED-Visualizer und Bedienung | [AliExpress](https://de.aliexpress.com/item/1005009962649997.html) |
 | 1 | TFT Display ILI9341 SPI | 240 x 320 Pixel, SPI, ILI9341 Controller, Display-Backlight separat angesteuert | Anzeige von Album-Art, Titel, Interpret, Album, Laufzeit und Playerstatus | [AliExpress](https://de.aliexpress.com/item/1005006315533240.html) |
 | 1 | Rotary Encoder mit Drucktaster | Drehencoder mit A/B-Signal und integriertem Taster | Lautstaerkeregelung per Drehung, Encoder-Taster auf GPIO35 | [AliExpress](https://de.aliexpress.com/item/1005001453647644.html) |
 | 1 | 5 Key Matrix Array | 5 Tasten, einzelne GPIO-Eingaenge mit Pullup | Lokale Medientasten fuer Next, Previous, INC, DEC und OK | [AliExpress](https://de.aliexpress.com/item/1005006245093356.html) |
