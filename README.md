@@ -54,6 +54,21 @@ Am linken Modul wird die L/R- beziehungsweise Channel-Select-Bruecke auf links
 gesetzt, am rechten Modul auf rechts. Jeder Verstaerker treibt genau einen
 Lautsprecher.
 
+## Bilder und Demo
+
+![Sendspin Player Front mit LEDs](media/sendspin-player-front-leds.jpeg)
+
+![Sendspin Player Display und LED-Ringe](media/sendspin-player-display-leds.jpeg)
+
+![Sendspin Player Display Nahaufnahme](media/sendspin-player-display-closeup.jpeg)
+
+![Sendspin Player Rueckseite](media/sendspin-player-back.jpeg)
+
+![Sendspin Player Seitenansicht](media/sendspin-player-side.jpeg)
+
+Video-Demo:
+[sendspin-player-visualizer-demo.mp4](media/sendspin-player-visualizer-demo.mp4)
+
 ## 3D-Druckdaten
 
 Die Gehaeusedaten liegen im Ordner [3d-print](3d-print/):
