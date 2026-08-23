@@ -12,7 +12,7 @@ Bill of Materials fuer den Sendspin Gartenhaus ESPHome Player.
 | 1 | 5 Key Matrix Array | 5 Tasten, einzelne GPIO-Eingaenge mit Pullup | Lokale Medientasten fuer Next, Previous, INC, DEC und OK | [AliExpress](https://de.aliexpress.com/item/1005006245093356.html) |
 | 1 | DC-DC Step-Down / Buck-Wandler | Eingang 12 V, Ausgang auf 5,0 V einstellen | Spannungsversorgung von 12 V auf 5 V fuer ESP32/LED/Peripherie | [AliExpress](https://de.aliexpress.com/item/1005009690612836.html) |
 | 1 | Steckernetzteil | 12 V DC, 2 A | Hauptversorgung fuer den Player | vom Benutzer angegeben |
-| 1 | DC-Hohlbuchse / Einbaubuchse | Passend zum 12-V-Steckernetzteil, Polung pruefen | 12-V-Eingang am Gehaeuse | [AliExpress](https://de.aliexpress.com/item/1005005610836339.html) |
+| 2 | I2S-Mono-Verstaerker | I2S-Eingang, L/R-Kanalauswahl am Modul, Betrieb an 5 V pruefen | Stereo-Verstaerkung mit je einem Modul fuer links und rechts | [AliExpress](https://de.aliexpress.com/item/1005007003802663.html) |
 | 2 | WS2812 LED-Ring 16 LEDs | adressierbarer RGB-LED-Ring, 16 LEDs, GRB-Farbfolge in ESPHome | Sound-to-Light / VU-Visualizer | [AliExpress](https://de.aliexpress.com/item/1005006140650184.html) |
 | 2 | Lautsprecher | Impedanz und Leistung am gelieferten Modell pruefen | Stereo-Audioausgabe des Players | [AliExpress](https://de.aliexpress.com/item/1005007733110506.html) |
 
@@ -64,11 +64,11 @@ konfiguriert. Beim Tastendruck wird der jeweilige Eingang gegen GND gezogen.
 | Bauteil | Anschluss | Hinweis |
 | --- | --- | --- |
 | Steckernetzteil | 12 V DC / 2 A | Eingang fuer das Geraet |
-| DC-Hohlbuchse | 12 V und GND | Polung vor Anschluss pruefen |
-| Step-Down-Wandler Eingang | 12 V und GND | Von der DC-Hohlbuchse |
+| Step-Down-Wandler Eingang | 12 V und GND | Vom Steckernetzteil |
 | Step-Down-Wandler Ausgang | 5,0 V und GND | Versorgung fuer 5-V-Schiene |
 | ESP32-S3 | 5 V/VIN und GND | Vom Step-Down-Ausgang, je nach Board-Beschriftung |
 | WS2812 LED-Ringe | 5 V und GND | Externe 5-V-Schiene empfohlen |
+| I2S-Verstaerker | 5 V und GND | Je nach Modul-Beschriftung anschliessen |
 
 Vor dem Anschluss an ESP32, Display oder LEDs den Ausgang des Step-Down-Wandlers
 mit einem Multimeter auf 5,0 V einstellen. Alle GND-Leitungen muessen verbunden
@@ -90,13 +90,19 @@ das gleiche 16-LED-Muster.
 
 | Bauteil | Anschluss | Hinweis |
 | --- | --- | --- |
-| I2S-DAC / Verstaerker | I2S vom ESP32-S3 | BCLK GPIO7, LRCLK GPIO5, DOUT GPIO6 |
-| Lautsprecher links | Verstaerker-Ausgang L | Polung beachten |
-| Lautsprecher rechts | Verstaerker-Ausgang R | Polung beachten |
+| I2S-Verstaerker links | BCLK GPIO7, LRCLK GPIO5, DIN GPIO6 | L/R-Select am Modul auf linken Kanal setzen |
+| I2S-Verstaerker rechts | BCLK GPIO7, LRCLK GPIO5, DIN GPIO6 | L/R-Select am Modul auf rechten Kanal setzen |
+| I2S-Verstaerker links | 5 V und GND | Versorgung von der 5-V-Schiene |
+| I2S-Verstaerker rechts | 5 V und GND | Versorgung von der 5-V-Schiene |
+| Lautsprecher links | Ausgang des linken Verstaerkers | Polung beachten |
+| Lautsprecher rechts | Ausgang des rechten Verstaerkers | Polung beachten |
 
 Die Lautsprecher werden nicht direkt vom ESP32-S3 angetrieben, sondern ueber den
-I2S-DAC beziehungsweise Verstaerker. Impedanz und maximale Leistung muessen zum
-verwendeten Verstaerker-Modul passen.
+I2S-Verstaerker. Fuer Stereo werden zwei gleiche I2S-Mono-Verstaerker verwendet.
+BCLK, LRCLK/WS und DIN werden parallel auf beide Module gefuehrt. Das linke
+Modul wird per L/R-Select auf links gesetzt, das rechte Modul per L/R-Select auf
+rechts. Impedanz und maximale Leistung der Lautsprecher muessen zum verwendeten
+Verstaerker-Modul passen.
 
 ## Display-Anschluss
 

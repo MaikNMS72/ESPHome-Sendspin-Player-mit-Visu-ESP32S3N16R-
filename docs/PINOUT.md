@@ -22,16 +22,29 @@ Pinout fuer den Sendspin Gartenhaus ESPHome Player.
 
 | Signal | GPIO | Hinweis |
 | --- | ---: | --- |
-| BCLK | GPIO7 | I2S Bit Clock |
-| LRCLK / WS | GPIO5 | I2S Word Select |
-| DOUT | GPIO6 | I2S Data Out zum externen DAC |
+| BCLK | GPIO7 | I2S Bit Clock, parallel an beide Verstaerker |
+| LRCLK / WS | GPIO5 | I2S Word Select, parallel an beide Verstaerker |
+| DOUT / DIN | GPIO6 | I2S Data Out vom ESP32 zu DIN beider Verstaerker |
+| AMP Enable | GPIO21 | Verstaerker-Freigabe, falls am Modul genutzt |
+
+## I2S-Stereo mit zwei Mono-Verstaerkern
+
+| Modul | I2S-Signale | Kanalauswahl | Lautsprecher |
+| --- | --- | --- | --- |
+| Linker Verstaerker | BCLK GPIO7, LRCLK GPIO5, DIN GPIO6 | L/R-Select auf links setzen | linker Lautsprecher |
+| Rechter Verstaerker | BCLK GPIO7, LRCLK GPIO5, DIN GPIO6 | L/R-Select auf rechts setzen | rechter Lautsprecher |
+
+Beide I2S-Verstaerker bekommen dieselben I2S-Signale parallel. Die Trennung in
+links und rechts erfolgt ueber die L/R- beziehungsweise Channel-Select-Bruecke am
+jeweiligen Modul. Beide Verstaerker muessen mit derselben Masse wie der ESP32-S3
+verbunden sein.
 
 Konfiguration:
 
 - Stereo
 - 48 kHz
 - 16 Bit
-- externer DAC
+- externe I2S-Verstaerker
 - Buffer: 100 ms
 
 ## TFT Display ILI9341
@@ -71,7 +84,7 @@ Die zwei Ringe sind parallel angeschlossen. Dadurch zeigen beide Ringe dasselbe
 
 ## Hinweise zur Verdrahtung
 
-- Gemeinsame Masse zwischen ESP32, DAC, Display, LED-Ring und Verstaerker ist erforderlich.
+- Gemeinsame Masse zwischen ESP32, I2S-Verstaerkern, Display, LED-Ring und Step-Down ist erforderlich.
 - WS2812-Datenleitung kurz halten oder mit Pegelanpassung betreiben, falls die LEDs mit 5 V laufen.
 - Fuer WS2812 eine passende externe 5-V-Versorgung verwenden, wenn die Ringe mehr Strom ziehen.
 - GPIO19 kann mit USB-Serial-JTAG kollidieren. Wenn USB-Logging oder Flashen ueber USB Probleme macht, OK-Taste testweise abklemmen oder auf einen anderen freien GPIO legen.

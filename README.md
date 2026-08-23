@@ -15,7 +15,7 @@ Die aktive Datei zum Flashen ist:
 ## Funktionen
 
 - Sendspin Medienplayer fuer Home Assistant
-- lokaler `speaker_source` Player fuer Audioausgabe ueber I2S-DAC
+- lokaler `speaker_source` Player fuer Audioausgabe ueber I2S-Verstaerker
 - Album-Art auf dem TFT-Display
 - Titel, Interpret und Album als Laufschrift
 - Fortschrittsbalken mit Laufzeit und Gesamtdauer
@@ -32,7 +32,7 @@ Die aktive Datei zum Flashen ist:
 - Board: ESP32-S3 DevKitC-1
 - Flash: 16 MB
 - PSRAM: Octal, 80 MHz
-- Audio: externer I2S-DAC
+- Audio: zwei externe I2S-Mono-Verstaerker fuer Stereo
 - Display: ILI9341 ueber SPI
 - LED: WS2812 an GPIO14
 - LED-Anzahl in ESPHome: 16
@@ -40,6 +40,19 @@ Die aktive Datei zum Flashen ist:
 
 Details stehen in [docs/PINOUT.md](docs/PINOUT.md).
 Die Bauteilliste steht in [docs/BOM.md](docs/BOM.md).
+
+## Audio-Verstaerker
+
+Fuer Stereo werden zwei I2S-Mono-Verstaerker verwendet. Beide Module bekommen
+die I2S-Signale parallel vom ESP32-S3:
+
+- BCLK: `GPIO7`
+- LRCLK / WS: `GPIO5`
+- DIN: `GPIO6`
+
+Am linken Modul wird die L/R- beziehungsweise Channel-Select-Bruecke auf links
+gesetzt, am rechten Modul auf rechts. Jeder Verstaerker treibt genau einen
+Lautsprecher.
 
 ## 3D-Druckdaten
 

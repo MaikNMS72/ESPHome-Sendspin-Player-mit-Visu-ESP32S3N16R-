@@ -14,7 +14,7 @@ Stand:
 - OTA erfolgreich geflasht
 - Album-Art und Metadaten auf ILI9341 Display
 - Titel, Interpret und Album als Laufschrift
-- Sendspin Audio ueber I2S-DAC
+- Sendspin Audio ueber I2S-Verstaerker
 - Power-Funktion fuer Home Assistant, Mushroom Card, Voice Assistant und OK-Langdruck
 - WS2812 Sound-to-Light mit subpixelartiger Teilhelligkeit
 - Standard-Empfindlichkeit 150%
