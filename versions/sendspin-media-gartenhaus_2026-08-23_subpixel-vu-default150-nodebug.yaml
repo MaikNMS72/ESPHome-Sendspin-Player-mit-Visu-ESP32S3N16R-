@@ -1,0 +1,767 @@
+substitutions:
+  name: squeezlite-gartenhaus
+  friendly_name: Squeezlite Gartenhaus
+  task_stack_in_psram: "true"
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  min_version: 2026.8.0
+
+external_components:
+  - source:
+      type: local
+      path: components
+    components:
+      - sendspin
+      - speaker_source
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: ESP32S3
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+    version: recommended
+    sdkconfig_options:
+      CONFIG_ESP32S3_DATA_CACHE_64KB: "y"
+      CONFIG_ESP32S3_DATA_CACHE_LINE_64B: "y"
+      CONFIG_SPIRAM_RODATA: "y"
+      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "y"
+      CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC: "y"
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+logger:
+  level: INFO
+
+api:
+
+ota:
+  platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "${friendly_name} Fallback"
+    password: "squeezelite"
+
+captive_portal:
+
+mdns:
+
+globals:
+  - id: stl_phase
+    type: uint32_t
+    restore_value: false
+    initial_value: "0"
+  - id: marquee_tick
+    type: uint32_t
+    restore_value: false
+    initial_value: "0"
+  - id: vu_level
+    type: float
+    restore_value: false
+    initial_value: "0.0"
+  - id: vu_fast_env
+    type: float
+    restore_value: false
+    initial_value: "0.0"
+  - id: vu_slow_env
+    type: float
+    restore_value: false
+    initial_value: "0.08"
+  - id: vu_beat_env
+    type: float
+    restore_value: false
+    initial_value: "0.0"
+  - id: vu_active_since_ms
+    type: uint32_t
+    restore_value: false
+    initial_value: "0"
+  - id: ok_long_press_handled
+    type: bool
+    restore_value: false
+    initial_value: "false"
+
+script:
+  - id: player_power_on_actions
+    mode: restart
+    then:
+      - switch.turn_on: amplifier_enable
+      - light.turn_on:
+          id: display_backlight
+          brightness: 100%
+      - lambda: |-
+          id(vu_level) = 0.0f;
+          id(vu_fast_env) = 0.0f;
+          id(vu_slow_env) = 0.08f;
+          id(vu_beat_env) = 0.0f;
+          id(vu_active_since_ms) = 0;
+      - if:
+          condition:
+            and:
+              - switch.is_on: sound_to_light_enabled
+              - media_player.is_playing: sendspin_player
+          then:
+            - light.turn_on:
+                id: ws2812_leds
+                effect: "Sendspin Sound-to-Light"
+                brightness: !lambda "return id(sound_to_light_level).state / 100.0f;"
+
+  - id: player_power_off_actions
+    mode: restart
+    then:
+      - media_player.stop: sendspin_group_player
+      - light.turn_off: ws2812_leds
+      - light.turn_off: display_backlight
+      - switch.turn_off: amplifier_enable
+      - lambda: |-
+          id(vu_level) = 0.0f;
+          id(vu_fast_env) = 0.0f;
+          id(vu_slow_env) = 0.08f;
+          id(vu_beat_env) = 0.0f;
+          id(vu_active_since_ms) = 0;
+
+  - id: next_track_guarded
+    mode: single
+    then:
+      - media_player.next: sendspin_group_player
+      - delay: 900ms
+
+  - id: previous_track_guarded
+    mode: single
+    then:
+      - media_player.previous: sendspin_group_player
+      - delay: 900ms
+
+  - id: volume_up_guarded
+    mode: restart
+    then:
+      - media_player.volume_up: sendspin_group_player
+
+  - id: volume_down_guarded
+    mode: restart
+    then:
+      - media_player.volume_down: sendspin_group_player
+
+interval:
+  - interval: 350ms
+    then:
+      - lambda: |-
+          id(marquee_tick)++;
+      - if:
+          condition:
+            lambda: |-
+              if (id(sendspin_player).state == media_player::MEDIA_PLAYER_STATE_PLAYING) {
+                return (id(marquee_tick) % 3) == 0;
+              }
+              return (id(marquee_tick) % 2) == 0;
+          then:
+            - component.update: tft_display
+
+  - interval: 2s
+    then:
+      - if:
+          condition:
+            and:
+              - switch.is_on: player_power
+              - switch.is_on: sound_to_light_enabled
+              - media_player.is_playing: sendspin_player
+              - light.is_off: ws2812_leds
+          then:
+            - light.turn_on:
+                id: ws2812_leds
+                effect: "Sendspin Sound-to-Light"
+                brightness: !lambda "return id(sound_to_light_level).state / 100.0f;"
+      - if:
+          condition:
+            and:
+              - light.is_on: ws2812_leds
+              - not:
+                  media_player.is_playing: sendspin_player
+          then:
+            - light.turn_off: ws2812_leds
+
+output:
+  - platform: ledc
+    pin: GPIO15
+    id: display_backlight_pwm
+    frequency: 1000Hz
+
+light:
+  - platform: monochromatic
+    id: display_backlight
+    name: "${friendly_name} Display Backlight"
+    output: display_backlight_pwm
+    restore_mode: ALWAYS_ON
+    default_transition_length: 250ms
+
+  - platform: esp32_rmt_led_strip
+    id: ws2812_leds
+    name: "${friendly_name} WS2812 LEDs"
+    pin: GPIO14
+    chipset: ws2812
+    channel_colors: GRB
+    num_leds: 16
+    restore_mode: RESTORE_DEFAULT_OFF
+    default_transition_length: 0s
+    effects:
+      - addressable_lambda:
+          name: "Sendspin Sound-to-Light"
+          update_interval: 35ms
+          lambda: |-
+            if (!id(sound_to_light_enabled).state ||
+                !id(player_power).state ||
+                id(sendspin_player).state != media_player::MEDIA_PLAYER_STATE_PLAYING) {
+              for (int i = 0; i < it.size(); i++) {
+                it[i] = Color(0, 0, 0);
+              }
+              id(vu_level) = 0.0f;
+              id(vu_fast_env) = 0.0f;
+              id(vu_slow_env) = 0.08f;
+              id(vu_beat_env) = 0.0f;
+              id(vu_active_since_ms) = 0;
+              return;
+            }
+
+            for (int i = 0; i < it.size(); i++) {
+              it[i] = Color(0, 0, 0);
+            }
+
+            const int vu_length = 8;
+            const int left_start = 7;
+            const int right_start = 8;
+            const int led_rotation = -3;
+            const int max_level = 255;
+            const uint32_t now_ms = millis();
+            if (id(vu_active_since_ms) == 0) {
+              id(vu_active_since_ms) = now_ms;
+            }
+            uint32_t active_ms = now_ms - id(vu_active_since_ms);
+
+            float brightness = std::min(1.0f, std::max(0.0f, id(sound_to_light_level).state / 100.0f));
+            float sensitivity_raw = std::min(2.5f, std::max(0.2f, id(sound_to_light_sensitivity).state / 100.0f));
+            float sensitivity = sensitivity_raw <= 1.5f ? sensitivity_raw : 1.5f + (sensitivity_raw - 1.5f) * 0.45f;
+            float rms = id(sendspin_source).get_audio_level();
+            float peak = id(sendspin_source).consume_audio_peak();
+            float raw = std::max(rms * 0.72f, peak * 0.96f);
+
+            float fast_alpha = raw > id(vu_fast_env) ? 0.94f : 0.46f;
+            id(vu_fast_env) += (raw - id(vu_fast_env)) * fast_alpha;
+
+            float slow_alpha = raw > id(vu_slow_env) ? 0.018f : 0.006f;
+            id(vu_slow_env) += (raw - id(vu_slow_env)) * slow_alpha;
+            id(vu_slow_env) = std::min(0.58f, std::max(0.020f, id(vu_slow_env)));
+
+            float level_control = 0.42f + sensitivity * 0.58f;
+            float beat_control = 1.08f;
+            float slow_ref = std::max(0.035f, id(vu_slow_env) * 0.96f);
+            float transient = (id(vu_fast_env) - slow_ref) / slow_ref;
+            float crest = (peak - rms * 2.05f) / std::max(0.075f, rms + 0.055f);
+            float beat = std::max(transient * 1.70f, crest * 0.24f);
+            beat = std::min(1.0f, std::max(0.0f, beat * beat_control));
+            if (active_ms < 10000 && beat > 0.62f) {
+              beat = 0.62f;
+            }
+            id(vu_beat_env) += (beat - id(vu_beat_env)) * (beat > id(vu_beat_env) ? 1.0f : 0.58f);
+
+            float body = std::min(1.0f, std::max(0.0f, (rms - 0.022f) * (0.70f + level_control) * 1.95f));
+            float sens_lift = std::min(1.0f, std::max(0.0f, (sensitivity - 0.20f) / 1.60f));
+            float beat_punch = id(vu_beat_env) * (0.42f + sens_lift * 0.14f);
+            float display_level = std::min(1.0f, std::max(0.0f, body * 0.72f + beat_punch));
+            float shaped = display_level;
+            float diff = shaped - id(vu_level);
+            float attack = diff > 0.25f ? 0.86f : (diff > 0.0f ? 0.72f : 0.38f);
+            id(vu_level) += (shaped - id(vu_level)) * attack;
+            id(vu_level) = std::min(1.0f, std::max(0.0f, id(vu_level)));
+
+            int vu = (int) roundf(id(vu_level) * max_level);
+            vu = std::min(max_level, std::max(0, vu));
+            if (vu < 8) {
+              vu = 0;
+            }
+
+            float vu_float = vu > 0 ? id(vu_level) * (float) vu_length : 0.0f;
+            vu_float = std::min((float) vu_length, std::max(0.0f, vu_float));
+            int full_leds = (int) floorf(vu_float);
+            float partial_led = vu_float - (float) full_leds;
+            if (full_leds >= vu_length) {
+              full_leds = vu_length;
+              partial_led = 0.0f;
+            }
+
+            int bright = std::min(255, std::max(1, (int) roundf(255.0f * brightness)));
+            int color_step = bright / (vu_length - 1);
+            if (color_step < 1) {
+              color_step = 1;
+            }
+
+            int g = bright * 2 / 3;
+            int r = 0;
+            int size = it.size();
+            for (int i = 0; i < vu_length; i++) {
+              int left = (left_start - i + led_rotation + size) % size;
+              int right = (right_start + i + led_rotation + size) % size;
+
+              float led_gain = 0.0f;
+              if (vu > 0) {
+                if (i < full_leds) {
+                  led_gain = 1.0f;
+                } else if (i == full_leds) {
+                  led_gain = partial_led;
+                }
+              }
+              if (led_gain > 0.0f) {
+                led_gain = std::min(1.0f, std::max(0.0f, led_gain));
+                uint8_t rr = (uint8_t) roundf(r * led_gain);
+                uint8_t gg = (uint8_t) roundf(g * led_gain);
+                if (left >= 0 && left < it.size()) {
+                  it[left] = Color(rr, gg, 0);
+                }
+                if (right >= 0 && right < it.size()) {
+                  it[right] = Color(rr, gg, 0);
+                }
+              }
+
+              r = r > bright - color_step ? bright : r + color_step;
+              g = g < color_step ? 0 : g - color_step;
+            }
+
+switch:
+  - platform: gpio
+    id: amplifier_enable
+    name: "${friendly_name} Verstaerker"
+    pin: GPIO21
+    restore_mode: ALWAYS_ON
+
+  - platform: template
+    id: player_power
+    name: "${friendly_name} Player Power"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    on_turn_on:
+      - script.execute: player_power_on_actions
+    on_turn_off:
+      - script.execute: player_power_off_actions
+
+  - platform: template
+    id: sound_to_light_enabled
+    name: "${friendly_name} Sound-to-Light"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    on_turn_on:
+      - if:
+          condition:
+            and:
+              - switch.is_on: player_power
+              - media_player.is_playing: sendspin_player
+          then:
+            - light.turn_on:
+                id: ws2812_leds
+                effect: "Sendspin Sound-to-Light"
+                brightness: !lambda "return id(sound_to_light_level).state / 100.0f;"
+    on_turn_off:
+      - light.turn_off: ws2812_leds
+
+number:
+  - platform: template
+    id: sound_to_light_level
+    name: "${friendly_name} Sound-to-Light Helligkeit"
+    min_value: 0
+    max_value: 100
+    step: 1
+    initial_value: 70
+    restore_value: true
+    optimistic: true
+    unit_of_measurement: "%"
+    on_value:
+      - if:
+          condition:
+            light.is_on: ws2812_leds
+          then:
+            - light.turn_on:
+                id: ws2812_leds
+                brightness: !lambda "return x / 100.0f;"
+
+  - platform: template
+    id: sound_to_light_sensitivity
+    name: "${friendly_name} Sound-to-Light Empfindlichkeit"
+    min_value: 20
+    max_value: 250
+    step: 5
+    initial_value: 150
+    restore_value: true
+    optimistic: true
+    unit_of_measurement: "%"
+
+spi:
+  - id: display_spi
+    clk_pin: GPIO12
+    mosi_pin: GPIO11
+    interface: spi2
+
+font:
+  - file: "gfonts://Roboto"
+    id: font_small
+    size: 16
+  - file: "gfonts://Roboto"
+    id: font_medium
+    size: 22
+  - file: "gfonts://Roboto"
+    id: font_large
+    size: 28
+
+color:
+  - id: color_bg
+    hex: "101418"
+  - id: color_text
+    hex: "F4F7F8"
+  - id: color_muted
+    hex: "94A3AD"
+  - id: color_accent
+    hex: "32D583"
+  - id: color_bar_bg
+    hex: "2B343B"
+
+image:
+  - platform: sendspin
+    id: album_art_slot
+    format: JPEG
+    type: RGB565
+    resize: 120x120
+    current_image:
+      id: album_art
+    on_image_display:
+      - component.update: tft_display
+    on_image_clear:
+      - component.update: tft_display
+
+display:
+  - platform: ili9xxx
+    id: tft_display
+    model: ILI9341
+    spi_id: display_spi
+    cs_pin: GPIO10
+    dc_pin: GPIO13
+    reset_pin: GPIO9
+    rotation: 270
+    pixel_mode: 18bit
+    data_rate: 20MHz
+    spi_mode: mode2
+    invert_colors: false
+    update_interval: never
+    lambda: |-
+      auto ascii = [](std::string s) -> std::string {
+        auto replace_all = [&s](const char *from, const char *to) {
+          size_t pos = 0;
+          while ((pos = s.find(from, pos)) != std::string::npos) {
+            s.replace(pos, strlen(from), to);
+            pos += strlen(to);
+          }
+        };
+        replace_all("\xC3\xA4", "ae");
+        replace_all("\xC3\xB6", "oe");
+        replace_all("\xC3\xBC", "ue");
+        replace_all("\xC3\x84", "Ae");
+        replace_all("\xC3\x96", "Oe");
+        replace_all("\xC3\x9C", "Ue");
+        replace_all("\xC3\x9F", "ss");
+        return s;
+      };
+
+      auto marquee = [](const std::string &text, size_t visible_chars, uint32_t tick_divisor) -> std::string {
+        if (text.length() <= visible_chars) {
+          return text;
+        }
+        std::string padded = text + "   ";
+        std::string loop = padded + text;
+        size_t pos = (id(marquee_tick) / tick_divisor) % padded.length();
+        return loop.substr(pos, visible_chars);
+      };
+
+      auto fmt_time = [](float ms) -> std::string {
+        if (isnan(ms) || ms <= 0.0f) {
+          return "0:00";
+        }
+        int sec = (int) (ms / 1000.0f);
+        char buf[12];
+        snprintf(buf, sizeof(buf), "%d:%02d", sec / 60, sec % 60);
+        return std::string(buf);
+      };
+
+      it.fill(id(color_bg));
+      it.image(8, 8, id(album_art));
+
+      std::string title = ascii(id(track_title).state);
+      std::string artist = ascii(id(track_artist).state);
+      std::string album = ascii(id(track_album).state);
+      if (title.empty()) title = "Bereit fuer Sendspin";
+      if (artist.empty()) artist = "Warte auf Wiedergabe";
+
+      title = marquee(title, 13, 1);
+      artist = marquee(artist, 15, 1);
+      album = marquee(album, 24, 2);
+
+      it.print(140, 16, id(font_large), id(color_text), title.c_str());
+      it.print(140, 52, id(font_medium), id(color_accent), artist.c_str());
+      it.print(140, 82, id(font_small), id(color_muted), album.c_str());
+
+      float progress = id(track_progress).state;
+      float duration = id(track_duration).state;
+      float ratio = 0.0f;
+      if (!isnan(progress) && !isnan(duration) && duration > 0.0f) {
+        ratio = std::min(1.0f, std::max(0.0f, progress / duration));
+      }
+
+      int bar_x = 8;
+      int bar_y = 154;
+      int bar_w = 304;
+      int bar_h = 10;
+      it.filled_rectangle(bar_x, bar_y, bar_w, bar_h, id(color_bar_bg));
+      it.filled_rectangle(bar_x, bar_y, (int) (bar_w * ratio), bar_h, id(color_accent));
+      it.print(8, 174, id(font_small), id(color_muted), fmt_time(progress).c_str());
+      it.printf(312, 174, id(font_small), id(color_muted), TextAlign::TOP_RIGHT, "%s", fmt_time(duration).c_str());
+
+      const char *state = id(sendspin_player).state == media_player::MEDIA_PLAYER_STATE_PLAYING ? "PLAY" : "PAUSE";
+      it.printf(8, 210, id(font_medium), id(color_text), "%s  Vol %d%%", state, (int) roundf(id(sendspin_player).volume * 100.0f));
+      it.printf(312, 214, id(font_small), id(color_muted), TextAlign::TOP_RIGHT, "LED %s %d%%",
+                id(sound_to_light_enabled).state ? "AN" : "AUS",
+                (int) roundf(id(sound_to_light_level).state));
+
+i2s_audio:
+  - id: i2s_out
+    i2s_bclk_pin: GPIO7
+    i2s_lrclk_pin: GPIO5
+
+speaker:
+  - platform: i2s_audio
+    id: i2s_speaker
+    i2s_audio_id: i2s_out
+    dac_type: external
+    i2s_dout_pin: GPIO6
+    channel: stereo
+    sample_rate: 48000
+    bits_per_sample: 16bit
+    buffer_duration: 100ms
+    timeout: never
+
+  - platform: mixer
+    id: audio_mixer_speaker
+    output_speaker: i2s_speaker
+    num_channels: 2
+    task_stack_in_psram: ${task_stack_in_psram}
+    source_speakers:
+      - id: media_mixer_input
+        timeout: never
+      - id: announcement_mixer_input
+        timeout: never
+
+  - platform: resampler
+    id: media_resampling_speaker
+    output_speaker: media_mixer_input
+    sample_rate: 48000
+    bits_per_sample: 16
+    task_stack_in_psram: ${task_stack_in_psram}
+
+  - platform: resampler
+    id: announcement_resampling_speaker
+    output_speaker: announcement_mixer_input
+    sample_rate: 48000
+    bits_per_sample: 16
+    task_stack_in_psram: ${task_stack_in_psram}
+
+sendspin:
+  id: sendspin_hub
+  task_stack_in_psram: ${task_stack_in_psram}
+
+media_source:
+  - platform: sendspin
+    id: sendspin_source
+    sample_rate: 48000
+    buffer_size: 1000000
+    decode_memory: internal
+    task_stack_in_psram: ${task_stack_in_psram}
+    initial_static_delay: 0ms
+    static_delay_adjustable: true
+
+media_player:
+  - platform: sendspin
+    id: sendspin_group_player
+    name: "${friendly_name} Sendspin Gruppe"
+    volume_increment: 2%
+    on_turn_on:
+      - switch.turn_on: player_power
+    on_turn_off:
+      - switch.turn_off: player_power
+
+  - platform: speaker_source
+    id: sendspin_player
+    name: "${friendly_name} Player"
+    volume_increment: 2%
+    media_pipeline:
+      speaker: media_resampling_speaker
+      format: FLAC
+      num_channels: 2
+      sample_rate: 48000
+      sources:
+        - sendspin_source
+    on_state:
+      - component.update: tft_display
+    on_turn_on:
+      - switch.turn_on: player_power
+      - media_player.play: sendspin_group_player
+    on_turn_off:
+      - switch.turn_off: player_power
+
+sensor:
+  - platform: sendspin
+    id: track_progress
+    type: track_progress
+    internal: true
+    update_interval: 5s
+
+  - platform: sendspin
+    id: track_duration
+    type: track_duration
+    internal: true
+    on_value:
+      - component.update: tft_display
+
+  - platform: rotary_encoder
+    id: volume_encoder
+    name: "${friendly_name} Encoder"
+    pin_a:
+      number: GPIO1
+      mode:
+        input: true
+        pullup: true
+    pin_b:
+      number: GPIO2
+      mode:
+        input: true
+        pullup: true
+    resolution: 2
+    restore_mode: ALWAYS_ZERO
+    on_clockwise:
+      - script.execute: volume_down_guarded
+    on_anticlockwise:
+      - script.execute: volume_up_guarded
+
+text_sensor:
+  - platform: sendspin
+    id: track_title
+    name: "${friendly_name} Titel"
+    type: title
+    on_value:
+      - component.update: tft_display
+
+  - platform: sendspin
+    id: track_artist
+    name: "${friendly_name} Interpret"
+    type: artist
+    on_value:
+      - component.update: tft_display
+
+  - platform: sendspin
+    id: track_album
+    name: "${friendly_name} Album"
+    type: album
+    on_value:
+      - component.update: tft_display
+
+binary_sensor:
+  - platform: gpio
+    id: button_next
+    name: "${friendly_name} Next"
+    pin:
+      number: GPIO17
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    filters:
+      - delayed_on: 80ms
+      - delayed_off: 80ms
+    on_press:
+      - script.execute: next_track_guarded
+
+  - platform: gpio
+    id: button_previous
+    name: "${friendly_name} Previous"
+    pin:
+      number: GPIO16
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    filters:
+      - delayed_on: 80ms
+      - delayed_off: 80ms
+    on_press:
+      - script.execute: previous_track_guarded
+
+  - platform: gpio
+    id: button_inc
+    name: "${friendly_name} INC"
+    pin:
+      number: GPIO4
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    filters:
+      - delayed_on: 30ms
+      - delayed_off: 30ms
+    on_press:
+      - script.execute: previous_track_guarded
+
+  - platform: gpio
+    id: button_dec
+    name: "${friendly_name} DEC"
+    pin:
+      number: GPIO18
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    filters:
+      - delayed_on: 30ms
+      - delayed_off: 30ms
+    on_press:
+      - script.execute: next_track_guarded
+
+  - platform: gpio
+    id: button_encoder
+    name: "${friendly_name} OK"
+    pin:
+      number: GPIO19
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    filters:
+      - delayed_on: 30ms
+      - delayed_off: 30ms
+    on_press:
+      - lambda: |-
+          id(ok_long_press_handled) = false;
+      - delay: 1200ms
+      - if:
+          condition:
+            binary_sensor.is_on: button_encoder
+          then:
+            - lambda: |-
+                id(ok_long_press_handled) = true;
+            - switch.toggle: player_power
+    on_release:
+      - if:
+          condition:
+            lambda: "return !id(ok_long_press_handled);"
+          then:
+            - media_player.toggle: sendspin_group_player
+      - lambda: |-
+          id(ok_long_press_handled) = false;
