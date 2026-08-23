@@ -67,6 +67,9 @@ Lautsprecher.
 ![Sendspin Player Seitenansicht](media/sendspin-player-side.jpeg)
 
 Video-Demo:
+[YouTube: Sendspin Player Visualizer Demo](https://youtu.be/OSCCFwxxo4M)
+
+Lokale Videodatei:
 [sendspin-player-visualizer-demo.mp4](media/sendspin-player-visualizer-demo.mp4)
 
 ## 3D-Druckdaten
