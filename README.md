@@ -80,6 +80,12 @@ Die Gehaeusedaten liegen im Ordner [3d-print](3d-print/):
 Die Dateien sind im 3MF-Format abgelegt und fuer das Gehaeuse mit ESP32-S3,
 LCD, Encoder und Tasten gedacht.
 
+Vorschau:
+
+![Gehaeuse Vorschau](3d-print/gehaeuse-esp32s3n16r8-lcd-encoder-button-body-fillet-preview.png)
+![Deckel Vorschau](3d-print/deckel-fillet001-preview.png)
+![Encoder-Knopf Vorschau](3d-print/encoder-knopf-body-fillet-preview.png)
+
 ## Home Assistant Entitaeten
 
 Wichtige Entitaeten:

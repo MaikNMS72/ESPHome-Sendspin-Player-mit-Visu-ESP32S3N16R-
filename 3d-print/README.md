@@ -11,6 +11,20 @@ Gartenhaus ESPHome Players.
 | `deckel-fillet001.3mf` | Deckel fuer das Gehaeuse |
 | `encoder-knopf-body-fillet.3mf` | Drehknopf fuer den Encoder |
 
+## Vorschau
+
+### Gehaeuse
+
+![Gehaeuse Vorschau](gehaeuse-esp32s3n16r8-lcd-encoder-button-body-fillet-preview.png)
+
+### Deckel
+
+![Deckel Vorschau](deckel-fillet001-preview.png)
+
+### Encoder-Knopf
+
+![Encoder-Knopf Vorschau](encoder-knopf-body-fillet-preview.png)
+
 ## Hinweise
 
 - Format: 3MF
