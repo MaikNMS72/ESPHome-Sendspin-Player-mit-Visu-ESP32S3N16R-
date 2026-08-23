@@ -735,7 +735,7 @@ binary_sensor:
       - script.execute: next_track_guarded
 
   - platform: gpio
-    id: button_encoder
+    id: button_ok
     name: "${friendly_name} OK"
     pin:
       number: GPIO19
@@ -752,7 +752,7 @@ binary_sensor:
       - delay: 1200ms
       - if:
           condition:
-            binary_sensor.is_on: button_encoder
+            binary_sensor.is_on: button_ok
           then:
             - lambda: |-
                 id(ok_long_press_handled) = true;
@@ -765,3 +765,16 @@ binary_sensor:
             - media_player.toggle: sendspin_group_player
       - lambda: |-
           id(ok_long_press_handled) = false;
+
+  - platform: gpio
+    id: button_encoder
+    name: "${friendly_name} Encoder Button"
+    pin:
+      number: GPIO35
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    filters:
+      - delayed_on: 30ms
+      - delayed_off: 30ms

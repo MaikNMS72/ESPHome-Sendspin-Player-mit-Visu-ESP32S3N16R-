@@ -15,7 +15,8 @@ Pinout fuer den Sendspin Gartenhaus ESPHome Player.
 | Taste Previous | GPIO16 | invertiert, Pullup |
 | Taste INC | GPIO4 | invertiert, Pullup |
 | Taste DEC | GPIO18 | invertiert, Pullup |
-| Taste OK / Encoder-Taste | GPIO19 | invertiert, Pullup, Kurz/Langdruck |
+| Taste OK | GPIO19 | invertiert, Pullup, Kurz/Langdruck |
+| Encoder-Taster | GPIO35 | invertiert, Pullup |
 
 ## I2S Audio
 

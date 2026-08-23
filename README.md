@@ -39,6 +39,7 @@ Die aktive Datei zum Flashen ist:
 - Aufbau: zwei 16er-LED-Ringe parallel, deshalb wird nur ein 16er-Ring angesteuert
 
 Details stehen in [docs/PINOUT.md](docs/PINOUT.md).
+Die Bauteilliste steht in [docs/BOM.md](docs/BOM.md).
 
 ## 3D-Druckdaten
 
